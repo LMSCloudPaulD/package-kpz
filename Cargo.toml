@@ -1,0 +1,11 @@
+[package]
+name = "package-kpz"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "3.0"
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1.0"
+regex = "1.7"
+zip = "0.5" # breaks on 0.6 on Rust 1.60
