@@ -12,7 +12,7 @@ The tool requires the following parameters:
 ### Example
 
 ```sh
-$ ./package-kpz -r "Koha-Plugin-Example-v1.0.0.kpz" -p "dist/Koha/Plugin/Com/LMSCloud/EventManagement.pm"
+$ ./package-kpz -r "Koha-Plugin-Example-v1.0.0.kpz" -p "Koha/Plugin/Com/LMSCloud/Example.pm"
 ```
 
 This will create a release file named **Koha-Plugin-Example-v1.0.0.kpz** containing the contents of the plugin with the main module located in **dist/Koha/Plugin/Com/LMSCloud/EventManagement.pm**.
