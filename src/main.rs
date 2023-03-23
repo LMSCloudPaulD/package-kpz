@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", build_params.pm_file_path_full_dist);
 
     build_directory()?;
-    copy_files(&build_params)?;
+    copy_files()?;
     substitute_strings(&build_params, &package_json)?;
     create_zip(&build_params, &package_json)?;
     cleanup()?;
@@ -58,10 +58,11 @@ fn build_directory() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn copy_files(build_params: &BuildParams) -> Result<(), Box<dyn std::error::Error>> {
+fn copy_files() -> Result<(), Box<dyn std::error::Error>> {
     let src = Path::new("Koha");
-    let dest = Path::new("dist").join(&build_params.pm_file_path_full_dist);
-    copy_dir_recursive(&src, &dest).map_err(|err| format!("Failed to copy files: {}", err))?;
+    let dest = Path::new("dist");
+    copy_dir_recursive(&src, &dest.join(src))
+        .map_err(|err| format!("Failed to copy files: {}", err))?;
     Ok(())
 }
 
@@ -131,7 +132,7 @@ fn add_directory_to_zip<P: AsRef<Path>>(
         };
 
         if path.is_dir() {
-            zip.add_directory(zip_path.clone(), *options)?;
+            zip.add_directory(zip_path.clone() + "/", *options)?;
             add_directory_to_zip(path, &zip_path, zip, options)?;
         } else {
             zip.start_file(zip_path, *options)?;
