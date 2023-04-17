@@ -1,5 +1,6 @@
 use chrono::Utc;
 use clap::{App, Arg};
+use colored::*;
 use regex::Regex;
 use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Read, Write};
@@ -42,14 +43,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pm_file_path_full_dist: matches.value_of("PM_FILE_PATH").unwrap().to_string(),
     };
 
-    println!("{}", build_params.release_filename);
-    println!("{}", build_params.pm_file_path_full_dist);
+    println!(
+        "{}\nName: {}\nVersion: {}\nRelease filename: {}\nPM file path: {}",
+        "Building Koha plugin Zip".bold().green(),
+        package_json["name"].to_string().yellow(),
+        package_json["version"].to_string().yellow(),
+        build_params.release_filename.yellow(),
+        build_params.pm_file_path_full_dist.yellow(),
+    );
 
     build_directory()?;
+    println!("{}", "Build directory created successfully".bold().green());
+
     copy_files()?;
+    println!("{}", "Files copied successfully".bold().green());
+
     substitute_strings(&build_params, &package_json)?;
+    println!("{}", "Strings substituted successfully".bold().green());
+
     create_zip(&build_params, &package_json)?;
+    println!("{}", "ZIP file created successfully".bold().green());
+
     cleanup()?;
+    println!("{}", "Cleanup done successfully".bold().green());
+
+    println!(
+        "{}",
+        "Package creation completed successfully".bold().green()
+    );
     Ok(())
 }
 
@@ -61,8 +82,14 @@ fn build_directory() -> Result<(), Box<dyn std::error::Error>> {
 fn copy_files() -> Result<(), Box<dyn std::error::Error>> {
     let src = Path::new("Koha");
     let dest = Path::new("dist");
+    println!(
+        "Copying files from {} to {}",
+        src.display().to_string().yellow(),
+        dest.display().to_string().yellow()
+    );
     copy_dir_recursive(&src, &dest.join(src))
         .map_err(|err| format!("Failed to copy files: {}", err))?;
+    println!("{}", "Files copied successfully".bold().green());
     Ok(())
 }
 
