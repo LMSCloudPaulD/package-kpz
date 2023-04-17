@@ -8,12 +8,11 @@ The tool requires the following parameters:
 
 - `--release-filename` (or `-r`): The filename for the output release file.
 - `--pm-file-path` (or `-p`): The full path to the PM file containing the plugin's main module.
-- `--translations-dir` (or `-t`, optional): The directory containing the .po translation files to be converted to JSON.
 
 ### Example
 
 ```sh
-$ ./package-kpz -r "Koha-Plugin-Example" -p "Koha/Plugin/Com/LMSCloud/Example.pm" -t "translations"
+$ ./package-kpz -r "Koha-Plugin-Example" -p "Koha/Plugin/Com/LMSCloud/Example.pm"
 ```
 
 This will create a release file named **Koha-Plugin-Example-v1.0.0.kpz** containing the contents of the plugin with the main module located in **dist/Koha/Plugin/Com/LMSCloud/EventManagement.pm**.
@@ -32,7 +31,6 @@ The tool consists of several functions that perform the following tasks:
 
 1. __build_directory__: Creates the dist directory.
 2. __copy_files__: Copies the plugin files from the Koha directory to the dist directory.
-3. __convert_translations__: Converts the .po translation files to JSON and saves them in the dist directory.
-4. __substitute_strings__: Updates the plugin version and release date in the PM file using the values from package.json.
-5. __create_zip__: Creates a ZIP file containing the plugin's contents and saves it with the specified release filename.
-6. __cleanup__: Removes the temporary dist directory created during the process.
+3. __substitute_strings__: Updates the plugin version and release date in the PM file using the values from package.json.
+4. __create_zip__: Creates a ZIP file containing the plugin's contents and saves it with the specified release filename.
+5. __cleanup__: Removes the temporary dist directory created during the process.

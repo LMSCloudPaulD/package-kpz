@@ -4,13 +4,11 @@ use regex::Regex;
 use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::Path;
-use std::process::Command;
 use zip::{write::FileOptions, CompressionMethod, ZipWriter};
 
 struct BuildParams {
     release_filename: String,
     pm_file_path_full_dist: String,
-    translations_dir: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,14 +32,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .help("Sets the full path for the PM file")
                 .required(true),
         )
-        .arg(
-            Arg::with_name("TRANSLATIONS_DIR")
-                .short('t')
-                .long("translations-dir")
-                .value_name("DIR")
-                .help("Sets the translations directory")
-                .required(false),
-        )
         .get_matches();
 
     let package_json: serde_json::Value =
@@ -50,7 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let build_params = BuildParams {
         release_filename: matches.value_of("RELEASE_FILENAME").unwrap().to_string(),
         pm_file_path_full_dist: matches.value_of("PM_FILE_PATH").unwrap().to_string(),
-        translations_dir: matches.value_of("TRANSLATIONS_DIR").map(|s| s.to_string()),
     };
 
     println!("{}", build_params.release_filename);
@@ -58,7 +47,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     build_directory()?;
     copy_files()?;
-    convert_translations(&build_params)?;
     substitute_strings(&build_params, &package_json)?;
     create_zip(&build_params, &package_json)?;
     cleanup()?;
@@ -185,59 +173,5 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> std::io::Result<()> {
         }
     }
 
-    Ok(())
-}
-
-fn call_po2json(file: &str, options: &str) -> Result<String, std::io::Error> {
-    let output = Command::new("npx")
-        .arg("po2json")
-        .arg(file)
-        .arg("-f")
-        .arg("mf")
-        .arg(options)
-        .output()?;
-
-    if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
-    } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "po2json execution failed",
-        ))
-    }
-}
-
-fn convert_translations(build_params: &BuildParams) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(translations_dir) = &build_params.translations_dir {
-        let src = Path::new(translations_dir);
-        let dest = Path::new("dist/locale");
-
-        for entry in fs::read_dir(&src)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("po") {
-                let locale = path.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
-                let dest_path = dest.join(format!("{}.json", locale));
-
-                let options = "--pretty --fuzzy"; // Add more options as needed
-
-                let data = call_po2json(&path.to_str().unwrap(), options)?;
-
-                let mut json_data: serde_json::Value = serde_json::from_str(&data)?;
-                json_data.as_object_mut().unwrap().insert(
-                    "".to_string(),
-                    serde_json::json!({
-                        "language": locale,
-                        "plural-forms": "nplurals=2; plural=n>1"
-                    }),
-                );
-
-                let json = serde_json::to_string(&json_data)?;
-
-                let mut json_file = BufWriter::new(File::create(dest_path)?);
-                json_file.write_all(json.as_bytes())?;
-            }
-        }
-    }
     Ok(())
 }
