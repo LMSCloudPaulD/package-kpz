@@ -1,0 +1,57 @@
+name: Build Binaries
+
+# Workflow triggers whenever code is pushed to the repo or a pull request is opened
+on: 
+  push:
+  pull_request:
+
+jobs:
+  build:
+    # Matrix builds expand with both target architectures
+    strategy:
+      matrix:
+        target: [aarch64-unknown-linux-gnu, x86_64-unknown-linux-gnu]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4  # Check out your repository code
+
+      - name: Install Rust toolchain (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }} # Dynamically set target from matrix
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Upload binaries as artifacts 
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-kpz-${{matrix.target}}
+          path: target/${{ matrix.target }}/release/package-kpz
+
+  release:
+    needs: build  
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') 
+
+    steps:
+      - uses: actions/download-artifact@v4 
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          files: |
+            artifacts/package-kpz-aarch64-unknown-linux-gnu
+            artifacts/package-kpz-x86_64-unknown-linux-gnu
